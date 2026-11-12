@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Calculator - ToolHub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px; /* Adjusted for wider screen */
+            width: 100%;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 220px; /* Calc + History */
+            gap: 20px;
+        }
+        @media (max-width: 700px) {
+            .container { grid-template-columns: 1fr; }
+            .history-section { display: none; } /* Hide history on very small screens to fit */
+        }
+        
+        .calc-section { display: flex; flex-direction: column; }
+        .back-btn {
+            display: inline-block; margin-bottom: 15px; color: #4facfe; text-decoration: none; font-weight: 600; font-size: 0.9rem;
+        }
+        h1 { color: #1a1a2e; font-size: 1.5rem; margin-bottom: 20px; }
+        
+        .display {
+            background: #1a1a2e; color: #fff; padding: 20px 15px; border-radius: 16px;
+            text-align: right; margin-bottom: 15px; min-height: 100px;
+            display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        .display .expression { font-size: 0.85rem; color: #8888aa; min-height: 20px; word-break: break-all; }
+        .display .current { font-size: 2.2rem; font-weight: 600; word-break: break-all; line-height: 1.1; }
+
+        .buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; } /* 5 columns for scientific */
+        
+        button {
+            padding: 18px 0; border: none; border-radius: 12px; font-size: 1.1rem;
+            font-weight: 600; cursor: pointer; transition: transform 0.1s, filter 0.2s;
+            background: #f0f0f5; color: #1a1a2e; font-family: inherit;
+        }
+        button:hover { filter: brightness(0.95); }
+        button:active { transform: scale(0.96); }
+        
+        .func { background: #e8e8f0; color: #333; font-size: 0.95rem; }
+        .op { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #fff; }
+        .equals { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #fff; grid-column: span 2; }
+        .clear { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
+
+        /* History Styles */
+        .history-section {
+            background: #f8f9ff; border-radius: 16px; padding: 15px; display: flex; flex-direction: column;
+        }
+        .history-section h3 { font-size: 0.95rem; color: #333; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .history-clear { font-size: 0.75rem; color: #f5576c; cursor: pointer; background: none; border: none; padding: 0; font-weight: 600; }
+        .history-clear:hover { text-decoration: underline; }
+        
+        .history-list { flex: 1; overflow-y: auto; max-height: 350px; }
+        .history-item {
+            background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px;
+            font-size: 0.85rem; border-left: 3px solid #4facfe; cursor: pointer; transition: 0.2s;
+        }
+        .history-item:hover { background: #eef0ff; }
+        .history-item .expr { color: #666; font-size: 0.75rem; margin-bottom: 3px; }
+        .history-item .res { color: #1a1a2e; font-weight: 700; text-align: right; }
+
+        @media (max-width: 400px) {
+            .container { padding: 15px; }
+            button { padding: 14px 0; font-size: 0.95rem; }
+            .display .current { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calc-section">
+            <a href="../index.html" class="back-btn">← Back to Tools</a>
+            <h1>🧮 Scientific Calculator</h1>
+
+            <div class="display">
+                <div class="expression" id="expression"></div>
+                <div class="current" id="current">0</div>
+            </div>
+
+            <div class="buttons">
+                <!-- Row 1: Scientific Functions -->
+                <button class="func" onclick="insertFunction('sin(')">sin</button>
+                <button class="func" onclick="insertFunction('cos(')">cos</button>
+                <button class="func" onclick="insertFunction('tan(')">tan</button>
+                <button class="func" onclick="insertFunction('log(')">log</button>
+                <button class="func" onclick="insertFunction('√(')">√</button>
+
+                <!-- Row 2: Scientific Functions -->
+                <button class="func" onclick="insertFunction('(')">(</button>
+                <button class="func" onclick="insertFunction(')')">)</button>
+                <button class="func" onclick="insertFunction('^')">x^y</button>
+                <button class="func" onclick="insertFunction('π')">π</button>
+                <button class="func" onclick="insertFunction('!')">x!</button>
+
+                <!-- Row 3: Numbers & Basics -->
+                <button class="clear" onclick="clearAll()">AC</button>
+                <button class="func" onclick="backspace()">⌫</button>
+                <button class="op" onclick="insertOperator('%')">%</button>
+                <button class="op" onclick="insertOperator('/')">÷</button>
+                <button class="op" onclick="insertOperator('*')">×</button>
+
+                <!-- Row 4 -->
+                <button onclick="insertNumber('7')">7</button>
+                <button onclick="insertNumber('8')">8</button>
+                <button onclick="insertNumber('9')">9</button>
+                <button class="op" onclick="insertOperator('-')">−</button>
+                <button class="op" onclick="insertOperator('+')">+</button>
+
+                <!-- Row 5 -->
+                <button onclick="insertNumber('4')">4</button>
+                <button onclick="insertNumber('5')">5</button>
+                <button onclick="insertNumber('6')">6</button>
+                <button class="func" onclick="insertFunction('+/-')">±</button>
+                <button class="equals" onclick="calculate()">=</button>
+
+                <!-- Row 6 -->
+                <button onclick="insertNumber('1')">1</button>
+                <button onclick="insertNumber('2')">2</button>
+                <button onclick="insertNumber('3')">3</button>
+                <button onclick="insertNumber('0')">0</button>
+                <button onclick="insertNumber('.')">.</button>
+            </div>
+        </div>
+
+        <!-- History Sidebar -->
+        <div class="history-section">
+            <h3>History <button class="history-clear" onclick="clearHistory()">Clear</button></h3>
+            <div class="history-list" id="historyList">
+                <div style="text-align: center; color: #999; font-size: 0.85rem; margin-top: 20px;">No history yet</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentExpression = '';
+        let history = [];
+
+        const currentEl = document.getElementById('current');
+        const expressionEl = document.getElementById('expression');
+        const historyList = document.getElementById('historyList');
+
+        function updateDisplay() {
+            // Display the raw expression in current (or evaluated result)
+            currentEl.textContent = currentExpression || '0';
+        }
+
+        function insertNumber(num) {
+            // Prevent multiple decimals in a single number (basic check)
+            if (num === '.') {
+                const parts = currentExpression.split(/[\+\-\*\/\%\^\(\)]/);
+                const lastPart = parts[parts.length - 1];
+                if (lastPart.includes('.')) return;
+            }
+            currentExpression += num;
+            updateDisplay();
+        }
+
+        function insertOperator(op) {
+            if (currentExpression === '' && op !== '-') return; // Don't start with operator (except minus)
+            // Prevent two operators consecutively
+            const lastChar = currentExpression.slice(-1);
+            if (['+', '-', '*', '/', '%', '^'].includes(lastChar)) {
+                currentExpression = currentExpression.slice(0, -1);
+            }
+            currentExpression += op;
+            updateDisplay();
+        }
+
+        function insertFunction(func) {
+            if (func === '+/-') {
+                // Negate the current expression (simple approach)
+                if (currentExpression.startsWith('-')) {
+                    currentExpression = currentExpression.substring(1);
+                } else if (currentExpression !== '') {
+                    currentExpression = '-' + currentExpression;
+                }
+            } else {
+                currentExpression += func;
+            }
+            updateDisplay();
+        }
+
+        function clearAll() {
+            currentExpression = '';
+            expressionEl.textContent = '';
+            updateDisplay();
+        }
+
+        function backspace() {
+            currentExpression = currentExpression.slice(0, -1);
+            updateDisplay();
+        }
+
+        // Helper Factorial
+        function factorial(n) {
+            if (n < 0) return NaN;
+            if (n === 0 || n === 1) return 1;
+            let res = 1;
+            for (let i = 2; i <= n; i++) res *= i;
+            return res;
+        }
+
+        function calculate() {
+            if (!currentExpression) return;
+
+            let exprStr = currentExpression;
+            expressionEl.textContent = exprStr + ' =';
+
+            try {
+                // Prepare string for evaluation
+                // 1. Replace symbols
+                let evalStr = exprStr
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/π/g, 'Math.PI')
+                    .replace(/√/g, 'Math.sqrt')
+                    .replace(/sin\(/g, 'Math.sin(')
+                    .replace(/cos\(/g, 'Math.cos(')
+                    .replace(/tan\(/g, 'Math.tan(')
+                    .replace(/log\(/g, 'Math.log10(');
+                
+                // 2. Handle Factorial (e.g., 5! -> factorial(5))
+                // This is a simple regex for numbers before '!'
+                evalStr = evalStr.replace(/(\d+)!/g, 'factorial($1)');
+
+                // 3. Handle Power (e.g., 2^3 -> Math.pow(2, 3))
+                // Simple approach for single numbers/parentheses
+                evalStr = evalStr.replace(/(\d+(\.\d+)?)\^(\d+(\.\d+)?)/g, 'Math.pow($1, $3)');
+
+                // 4. Evaluate safely using Function
+                // (Note: eval is generally unsafe, but for a local calculator we use Function)
+                let result = new Function('return ' + evalStr)();
+
+                // Rounding to avoid floating point issues
+                result = Math.round(result * 100000000) / 100000000;
+
+                if (!isFinite(result)) throw new Error("Math Error");
+
+                // Update UI
+                currentExpression = result.toString();
+                currentEl.textContent = currentExpression;
+                addToHistory(exprStr, result.toString());
+
+            } catch (error) {
+                currentEl.textContent = 'Error';
+                currentExpression = '';
+                setTimeout(() => updateDisplay(), 1500);
+            }
+        }
+
+        // ==========================================
+        // HISTORY LOGIC
+        // ==========================================
+        function addToHistory(expr, res) {
+            history.unshift({ expr, res });
+            if (history.length > 20) history.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #999; font-size: 0.85rem; margin-top: 20px;">No history yet</div>';
+                return;
+            }
+            historyList.innerHTML = history.map(item => `
+                <div class="history-item" onclick="useHistory('${item.res}')">
+                    <div class="expr">${item.expr}</div>
+                    <div class="res">${item.res}</div>
+                </div>
+            `).join('');
+        }
+
+        function useHistory(val) {
+            currentExpression = val;
+            updateDisplay();
+        }
+
+        function clearHistory() {
+            history = [];
+            renderHistory();
+        }
+
+        // Keyboard support (Basic: Numbers, Operators, Enter, Backspace, Escape)
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') insertNumber(e.key);
+            else if (e.key === '.') insertNumber('.');
+            else if (['+', '-', '*', '/', '%', '^'].includes(e.key)) insertOperator(e.key);
+            else if (e.key === '(' || e.key === ')') insertFunction(e.key);
+            else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculate(); }
+            else if (e.key === 'Backspace') backspace();
+            else if (e.key === 'Escape') clearAll();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>

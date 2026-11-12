@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Text Converter - ToolHub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 750px;
+            width: 100%;
+            padding: 40px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #fa709a;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 20px; font-size: 0.95rem; }
+
+        /* Toolbar for Undo/Redo */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            justify-content: flex-end;
+        }
+        .toolbar button {
+            background: #f0f0f5;
+            border: 1px solid #e0e0e8;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .toolbar button:hover:not(:disabled) { background: #e0e0e8; }
+        .toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e8;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+            margin-bottom: 10px;
+        }
+        textarea:focus { outline: none; border-color: #fa709a; }
+        
+        .counter {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button.btn-action {
+            padding: 12px;
+            background: #f0f0f5;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        button.btn-action:hover { background: #e0e0e8; }
+        button.btn-action.primary {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+            color: #fff;
+        }
+        button.btn-action.primary:hover { box-shadow: 0 4px 15px rgba(250,112,154,0.4); }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin: 20px 0 10px;
+            border-bottom: 2px solid #f0f0f5;
+            padding-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">← Back to Tools</a>
+        <h1>🔤 Pro Text Converter</h1>
+        <p class="subtitle">Convert, style, and analyze your text easily</p>
+
+        <!-- Undo/Redo Toolbar -->
+        <div class="toolbar">
+            <button id="undoBtn" onclick="undo()" disabled title="Undo (Ctrl+Z)">↩️ Undo</button>
+            <button id="redoBtn" onclick="redo()" disabled title="Redo (Ctrl+Y)">↪️ Redo</button>
+        </div>
+
+        <textarea id="textInput" placeholder="Type or paste your text here..." oninput="handleInput()"></textarea>
+        
+        <div class="counter">
+            <span>📝 <b id="charCount">0</b> Characters</span>
+            <span>📖 <b id="wordCount">0</b> Words</span>
+            <span>📄 <b id="lineCount">0</b> Lines</span>
+        </div>
+
+        <div class="section-title">Basic Formatting</div>
+        <div class="btn-grid">
+            <button class="btn-action" onclick="convertCase('upper')">UPPERCASE</button>
+            <button class="btn-action" onclick="convertCase('lower')">lowercase</button>
+            <button class="btn-action" onclick="convertCase('title')">Title Case</button>
+            <button class="btn-action" onclick="convertCase('sentence')">Sentence case</button>
+            <button class="btn-action" onclick="convertCase('reverse')">Reverse Text</button>
+        </div>
+
+        <div class="section-title">Stylish / Fancy Text (For Social Media)</div>
+        <div class="btn-grid">
+            <button class="btn-action" onclick="convertCase('fancy1')">𝓕𝓪𝓷𝓬𝔂 𝓢𝓽𝔂𝓵𝓮</button>
+            <button class="btn-action" onclick="convertCase('fancy2')">𝐁𝐨𝐥𝐝 𝐒𝐭𝐲𝐥𝐞</button>
+            <button class="btn-action" onclick="convertCase('fancy3')">🅲🅸🆁🅲🅻🅴</button>
+            <button class="btn-action" onclick="convertCase('fancy4')">S̶t̶r̶i̶k̶e̶ ̶T̶h̶r̶o̶u̶g̶h̶</button>
+        </div>
+
+        <div class="section-title">Developer Tools</div>
+        <div class="btn-grid">
+            <button class="btn-action" onclick="convertCase('binary')">To Binary</button>
+            <button class="btn-action" onclick="convertCase('morse')">To Morse Code</button>
+            <button class="btn-action" onclick="convertCase('base64')">To Base64</button>
+        </div>
+
+        <div class="btn-grid" style="margin-top: 20px; grid-template-columns: 1fr 1fr;">
+            <button class="btn-action primary" onclick="copyText()">📋 Copy Text</button>
+            <button class="btn-action" onclick="speakText()">🔊 Speak Text</button>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        
+        // History State Variables
+        let historyStack = [];
+        let historyIndex = -1;
+        let isUndoRedoAction = false;
+
+        // Initialize history with empty state
+        function initHistory() {
+            historyStack = [''];
+            historyIndex = 0;
+            updateToolbarButtons();
+        }
+
+        // Handle every input
+        function handleInput() {
+            if (!isUndoRedoAction) {
+                pushToHistory(textInput.value);
+            }
+            updateStats();
+        }
+
+        // Push state to history (Throttled by checking if value changed)
+        function pushToHistory(value) {
+            if (historyIndex >= 0 && historyStack[historyIndex] === value) {
+                return; // No change, don't add to stack
+            }
+
+            // Remove any redo states ahead
+            historyStack = historyStack.slice(0, historyIndex + 1);
+            historyStack.push(value);
+            historyIndex++;
+
+            // Limit history to 50 states to prevent memory leak
+            if (historyStack.length > 50) {
+                historyStack.shift();
+                historyIndex--;
+            }
+            updateToolbarButtons();
+        }
+
+        // Undo functionality
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                applyHistoryState();
+            }
+        }
+
+        // Redo functionality
+        function redo() {
+            if (historyIndex < historyStack.length - 1) {
+                historyIndex++;
+                applyHistoryState();
+            }
+        }
+
+        // Apply state without triggering input history push
+        function applyHistoryState() {
+            isUndoRedoAction = true;
+            textInput.value = historyStack[historyIndex];
+            isUndoRedoAction = false;
+            updateStats();
+            updateToolbarButtons();
+        }
+
+        // Enable/Disable Toolbar Buttons
+        function updateToolbarButtons() {
+            undoBtn.disabled = historyIndex <= 0;
+            redoBtn.disabled = historyIndex >= historyStack.length - 1;
+        }
+
+        // Update character/word counts
+        function updateStats() {
+            const text = textInput.value;
+            document.getElementById('charCount').textContent = text.length;
+            document.getElementById('wordCount').textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+            document.getElementById('lineCount').textContent = text.trim() ? text.split('\n').length : 0;
+        }
+
+        function convertCase(type) {
+            let text = textInput.value;
+            if (!text) return;
+
+            if (type === 'upper') text = text.toUpperCase();
+            else if (type === 'lower') text = text.toLowerCase();
+            else if (type === 'title') text = text.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            else if (type === 'sentence') text = text.toLowerCase().replace(/(^\s*\w|[\.\!\?]\s*\w)/g, (c) => c.toUpperCase());
+            else if (type === 'reverse') text = text.split('').reverse().join('');
+            else if (type === 'binary') text = text.split('').map(char => char.charCodeAt(0).toString(2)).join(' ');
+            else if (type === 'base64') text = btoa(text);
+            else if (type === 'morse') {
+                const morseDict = { 'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.', 'F':'..-.', 'G':'--.', 'H':'....', 'I':'..', 'J':'.---', 'K':'-.-', 'L':'.-..', 'M':'--', 'N':'-.', 'O':'---', 'P':'.--.', 'Q':'--.-', 'R':'.-.', 'S':'...', 'T':'-', 'U':'..-', 'V':'...-', 'W':'.--', 'X':'-..-', 'Y':'-.--', 'Z':'--..', '1':'.----', '2':'..---', '3':'...--', '4':'....-', '5':'.....', '6':'-....', '7':'--...', '8':'---..', '9':'----.', '0':'-----', ' ':'/' };
+                text = text.toUpperCase().split('').map(char => morseDict[char] || char).join(' ');
+            }
+            else if (type === 'fancy1') {
+                const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                const fancy = "𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩";
+                text = text.split('').map(c => chars.includes(c) ? fancy[chars.indexOf(c)] : c).join('');
+            }
+            else if (type === 'fancy2') {
+                const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                const bold = "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙";
+                text = text.split('').map(c => chars.includes(c) ? bold[chars.indexOf(c)] : c).join('');
+            }
+            else if (type === 'fancy3') {
+                const chars = "abcdefghijklmnopqrstuvwxyz";
+                const circle = "ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ";
+                text = text.toLowerCase().split('').map(c => chars.includes(c) ? circle[chars.indexOf(c)] : c).join('');
+            }
+            else if (type === 'fancy4') {
+                text = text.split('').map(c => c + '\u0336').join('');
+            }
+
+            // Set value and trigger history push
+            textInput.value = text;
+            pushToHistory(text);
+            updateStats();
+        }
+
+        function copyText() {
+            if (!textInput.value) return;
+            navigator.clipboard.writeText(textInput.value).then(() => alert('Text copied to clipboard!'));
+        }
+
+        function speakText() {
+            if (!textInput.value) return;
+            const utterance = new SpeechSynthesisUtterance(textInput.value);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Keyboard Shortcuts (Ctrl+Z / Ctrl+Y)
+        textInput.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        });
+
+        // Initialize
+        initHistory();
+        updateStats();
+    </script>
+</body>
+</html>

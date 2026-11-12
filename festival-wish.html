@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Wish Generator - ToolHub</title>
+    <!-- html2canvas for Downloading card as Image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 650px;
+            width: 100%;
+            padding: 40px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #ff9a9e;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 0.95rem; }
+        input, select {
+            width: 100%; padding: 12px 15px; border: 2px solid #e0e0e8; border-radius: 10px;
+            font-size: 1rem; font-family: inherit; transition: border 0.3s;
+        }
+        input:focus, select:focus { outline: none; border-color: #ff9a9e; }
+
+        button {
+            width: 100%; padding: 15px; background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+            cursor: pointer; margin-top: 10px; transition: 0.2s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,154,158,0.4); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Preview Area */
+        .card-preview { margin-top: 25px; padding: 20px; border-radius: 12px; background: #f8f9ff; display: none; text-align: center; }
+        .card-preview.show { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Greeting Card Design */
+        .greeting-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; padding: 50px 30px; border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(102,126,234,0.3);
+            position: relative; overflow: hidden; margin-bottom: 20px;
+            /* For better rendering on canvas */
+            width: 100%; min-height: 350px; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        /* Decorative background icons */
+        .greeting-card::before {
+            content: '🎉'; position: absolute; font-size: 10rem; opacity: 0.1; top: -30px; left: -20px; transform: rotate(-20deg);
+        }
+        .greeting-card::after {
+            content: '✨'; position: absolute; font-size: 8rem; opacity: 0.1; bottom: -20px; right: -20px; transform: rotate(20deg);
+        }
+
+        .greeting-card h2 { font-size: 2.2rem; margin-bottom: 15px; position: relative; z-index: 2; text-align: center; }
+        .greeting-card .message-text { font-size: 1.1rem; opacity: 0.9; position: relative; z-index: 2; text-align: center; max-width: 80%; margin-bottom: 30px; }
+        .greeting-card .recipient { font-size: 1.8rem; font-weight: 700; color: #ffe066; position: relative; z-index: 2; margin-bottom: 20px; text-align: center; }
+        .greeting-card .sender { font-size: 1.1rem; opacity: 0.8; position: relative; z-index: 2; text-align: center; }
+
+        .download-btn { background: #43e97b; margin-top: 10px; }
+        .download-btn:hover { box-shadow: 0 8px 20px rgba(67,233,123,0.4); }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">← Back to Tools</a>
+        <h1>🎉 Festival Wish Generator</h1>
+        <p class="subtitle">Create beautiful festival greetings and download as image</p>
+
+        <div class="form-group">
+            <label>Select Festival / Occasion:</label>
+            <select id="festival" onchange="generateWish()">
+                <option value="Eid Mubarak!" data-icon="🌙" data-msg="May this special day bring peace, happiness and prosperity to you and your family.">Eid Mubarak</option>
+                <option value="Happy Diwali!" data-icon="🪔" data-msg="May the festival of lights fill your home with joy, health and wealth.">Diwali</option>
+                <option value="Merry Christmas!" data-icon="🎄" data-msg="Wishing you a season full of light and laughter. Have a magical Christmas!">Christmas</option>
+                <option value="Happy New Year!" data-icon="🎆" data-msg="Cheers to a new year and another chance for us to get it right.">New Year</option>
+                <option value="Shuvo Noboborsho!" data-icon="🌸" data-msg="May this new year bring you success, love and endless joy. Pohela Boishakh er shubhechha!">Pohela Boishakh</option>
+                <option value="Happy Birthday!" data-icon="🎂" data-msg="Wishing you a day filled with love, laughter, and all your favorite things.">Birthday</option>
+                <option value="Happy Anniversary!" data-icon="💖" data-msg="Celebrating your beautiful journey together. Wishing you many more years of love.">Anniversary</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Recipient's Name:</label>
+            <input type="text" id="recipientName" placeholder="e.g. Rahul" oninput="generateWish()">
+        </div>
+
+        <div class="form-group">
+            <label>Your Name (Sender):</label>
+            <input type="text" id="senderName" placeholder="e.g. Your Name" oninput="generateWish()">
+        </div>
+
+        <button onclick="generateWish()">Generate Preview</button>
+
+        <!-- Preview Area -->
+        <div class="card-preview" id="preview">
+            
+            <!-- The actual card to be captured -->
+            <div class="greeting-card" id="cardContent">
+                <h2 id="cardTitle">Eid Mubarak!</h2>
+                <div class="message-text" id="cardMessage">May this special day bring peace, happiness and prosperity to you and your family.</div>
+                <div class="recipient">Dear <span id="cardRecipient">Friend</span>,</div>
+                <div class="sender">- With love, <span id="cardSender">Me</span></div>
+            </div>
+
+            <button class="download-btn" id="downloadBtn" onclick="downloadCard()">⬇️ Download Card as Image</button>
+        </div>
+    </div>
+
+    <script>
+        function generateWish() {
+            const festivalSelect = document.getElementById('festival');
+            const selectedOption = festivalSelect.options[festivalSelect.selectedIndex];
+            
+            const title = selectedOption.value;
+            const msg = selectedOption.getAttribute('data-msg');
+            
+            const recipient = document.getElementById('recipientName').value.trim() || 'Friend';
+            const sender = document.getElementById('senderName').value.trim() || 'Me';
+
+            document.getElementById('cardTitle').textContent = title;
+            document.getElementById('cardMessage').textContent = msg;
+            document.getElementById('cardRecipient').textContent = recipient;
+            document.getElementById('cardSender').textContent = sender;
+
+            document.getElementById('preview').classList.add('show');
+        }
+
+        function downloadCard() {
+            const card = document.getElementById('cardContent');
+            const btn = document.getElementById('downloadBtn');
+            
+            // Change button state
+            btn.textContent = '⏳ Creating Image...';
+            btn.disabled = true;
+
+            // Use html2canvas to take a snapshot of the div
+            html2canvas(card, {
+                scale: 2, // High quality output
+                useCORS: true,
+                backgroundColor: null // Keep transparent if needed
+            }).then(canvas => {
+                // Convert to Image
+                const imgData = canvas.toDataURL('image/png');
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = `Wish_${Date.now()}.png`;
+                link.href = imgData;
+                link.click();
+
+                // Reset Button
+                btn.textContent = '⬇️ Download Card as Image';
+                btn.disabled = false;
+            }).catch(error => {
+                console.error("Error generating image:", error);
+                alert("Sorry, there was an error creating the image. Please try again.");
+                btn.textContent = '⬇️ Download Card as Image';
+                btn.disabled = false;
+            });
+        }
+
+        // Initialize on load
+        window.onload = generateWish;
+    </script>
+</body>
+</html>

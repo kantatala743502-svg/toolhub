@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced QR Code Generator - ToolHub</title>
+    <!-- QRCode.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #f5576c;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 0.95rem; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 0.9rem; }
+        textarea, input[type="text"], input[type="url"], select, input[type="file"] {
+            width: 100%; padding: 12px 15px; border: 2px solid #e0e0e8; border-radius: 10px;
+            font-size: 0.95rem; font-family: inherit; transition: border 0.3s; background: #fff;
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        textarea:focus, input:focus, select:focus { outline: none; border-color: #f5576c; }
+        
+        /* Logo Upload Style */
+        .logo-upload-wrapper {
+            border: 2px dashed #e0e0e8; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; background: #f8f9ff; transition: 0.3s;
+        }
+        .logo-upload-wrapper:hover { border-color: #f5576c; }
+        .logo-upload-wrapper input[type="file"] { display: none; }
+        .logo-preview { width: 50px; height: 50px; object-fit: contain; margin-top: 10px; display: none; border-radius: 6px; }
+
+        .color-picker-group { display: flex; gap: 10px; align-items: center; }
+        .color-picker-group input[type="color"] {
+            width: 50px; height: 40px; border: none; border-radius: 8px; cursor: pointer; background: none;
+        }
+
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        button {
+            padding: 15px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; font-family: inherit;
+        }
+        .btn-primary { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,87,108,0.4); }
+        .btn-secondary { background: #f0f0f5; color: #333; }
+        .btn-secondary:hover { background: #e0e0e8; }
+
+        .qr-result {
+            margin-top: 30px; text-align: center; display: none; padding: 25px; background: #f8f9ff; border-radius: 16px; animation: fadeIn 0.5s;
+        }
+        .qr-result.show { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Important: The main canvas where QR + Logo is drawn */
+        #qr-canvas-container { display: inline-block; padding: 15px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        #qrCanvas { display: block; max-width: 100%; height: auto; }
+
+        .download-btns { display: flex; gap: 10px; justify-content: center; }
+        .download-btns button { padding: 12px 20px; }
+        .btn-png { background: #4facfe; color: #fff; }
+        .btn-svg { background: #43e97b; color: #fff; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">← Back to Tools</a>
+        <h1>📱 Pro QR Generator</h1>
+        <p class="subtitle">Generate custom QR codes with Logo, Colors & Multiple Types</p>
+
+        <div class="form-group">
+            <label>Select QR Type:</label>
+            <select id="qrType" onchange="updateFormFields()">
+                <option value="text">📝 Text / URL</option>
+                <option value="email">📧 Email</option>
+                <option value="phone">📞 Phone Call</option>
+                <option value="sms">💬 SMS Message</option>
+                <option value="wifi">📶 WiFi Network</option>
+                <option value="vcard">👤 Contact (vCard)</option>
+            </select>
+        </div>
+
+        <!-- Dynamic Fields Container -->
+        <div id="dynamicFields"></div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Foreground Color:</label>
+                <div class="color-picker-group">
+                    <input type="color" id="fgColor" value="#1a1a2e">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Background Color:</label>
+                <div class="color-picker-group">
+                    <input type="color" id="bgColor" value="#ffffff">
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>QR Size:</label>
+                <select id="qrSize">
+                    <option value="300">Small (300x300)</option>
+                    <option value="500" selected>Medium (500x500)</option>
+                    <option value="800">Large (800x800)</option>
+                </select>
+            </div>
+            
+            <!-- Logo Upload Option -->
+            <div class="form-group">
+                <label>Logo / Photo (Optional):</label>
+                <div class="logo-upload-wrapper" onclick="document.getElementById('logoInput').click()">
+                    <span>📷 Click to upload Logo</span>
+                    <input type="file" id="logoInput" accept="image/*" onchange="previewLogo(event)">
+                    <img id="logoPreview" class="logo-preview" alt="Logo Preview">
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn-primary" onclick="generateQR()">Generate QR Code</button>
+            <button class="btn-secondary" onclick="clearQR()">Clear</button>
+        </div>
+
+        <div class="qr-result" id="qrResult">
+            <div id="qr-canvas-container">
+                <canvas id="qrCanvas"></canvas>
+            </div>
+            <br>
+            <div class="download-btns">
+                <button class="btn-png" onclick="downloadQR('png')">⬇️ Download PNG</button>
+                <button class="btn-svg" onclick="downloadQR('svg')">⬇️ Download SVG</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logoImageObj = null;
+
+        // Initial load
+        updateFormFields();
+
+        function updateFormFields() {
+            const type = document.getElementById('qrType').value;
+            const container = document.getElementById('dynamicFields');
+            let html = '';
+
+            if (type === 'text') {
+                html = `
+                    <div class="form-group">
+                        <label>Enter Text or URL:</label>
+                        <textarea id="inputText" placeholder="https://example.com or any text..."></textarea>
+                    </div>`;
+            } else if (type === 'email') {
+                html = `
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Email Address:</label>
+                            <input type="text" id="emailAddress" placeholder="hello@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Subject (Optional):</label>
+                            <input type="text" id="emailSubject" placeholder="Subject...">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Message Body (Optional):</label>
+                        <textarea id="emailBody" placeholder="Type your message..."></textarea>
+                    </div>`;
+            } else if (type === 'phone') {
+                html = `
+                    <div class="form-group">
+                        <label>Phone Number (with country code):</label>
+                        <input type="text" id="phoneNumber" placeholder="+8801700000000">
+                    </div>`;
+            } else if (type === 'sms') {
+                html = `
+                    <div class="form-group">
+                        <label>Phone Number:</label>
+                        <input type="text" id="smsPhone" placeholder="+8801700000000">
+                    </div>
+                    <div class="form-group">
+                        <label>Message:</label>
+                        <textarea id="smsMessage" placeholder="Type your SMS message..."></textarea>
+                    </div>`;
+            } else if (type === 'wifi') {
+                html = `
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>WiFi Network Name (SSID):</label>
+                            <input type="text" id="wifiName" placeholder="My WiFi">
+                        </div>
+                        <div class="form-group">
+                            <label>Password:</label>
+                            <input type="text" id="wifiPassword" placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Security Type:</label>
+                        <select id="wifiSecurity">
+                            <option value="WPA">WPA / WPA2 / WPA3</option>
+                            <option value="WEP">WEP</option>
+                            <option value="nopass">None (Open)</option>
+                        </select>
+                    </div>`;
+            } else if (type === 'vcard') {
+                html = `
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Full Name:</label>
+                            <input type="text" id="vcName" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone:</label>
+                            <input type="text" id="vcPhone" placeholder="+8801700000000">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Email:</label>
+                            <input type="text" id="vcEmail" placeholder="john@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Organization (Optional):</label>
+                            <input type="text" id="vcOrg" placeholder="Company Name">
+                        </div>
+                    </div>`;
+            }
+
+            container.innerHTML = html;
+            document.getElementById('qrResult').classList.remove('show');
+        }
+
+        // Logo preview handler
+        function previewLogo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    logoImageObj = img;
+                    const preview = document.getElementById('logoPreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'inline-block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getQRContent() {
+            const type = document.getElementById('qrType').value;
+            
+            if (type === 'text') {
+                return document.getElementById('inputText').value.trim();
+            } else if (type === 'email') {
+                const email = document.getElementById('emailAddress').value.trim();
+                const subject = document.getElementById('emailSubject').value.trim();
+                const body = document.getElementById('emailBody').value.trim();
+                if (!email) return '';
+                let url = `mailto:${email}`;
+                let params = [];
+                if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+                if (body) params.push(`body=${encodeURIComponent(body)}`);
+                if (params.length) url += `?${params.join('&')}`;
+                return url;
+            } else if (type === 'phone') {
+                const phone = document.getElementById('phoneNumber').value.trim();
+                return phone ? `tel:${phone}` : '';
+            } else if (type === 'sms') {
+                const phone = document.getElementById('smsPhone').value.trim();
+                const msg = document.getElementById('smsMessage').value.trim();
+                if (!phone) return '';
+                return msg ? `smsto:${phone}:${msg}` : `smsto:${phone}`;
+            } else if (type === 'wifi') {
+                const name = document.getElementById('wifiName').value.trim();
+                const pass = document.getElementById('wifiPassword').value;
+                const sec = document.getElementById('wifiSecurity').value;
+                if (!name) return '';
+                if (sec === 'nopass') return `WIFI:T:nopass;S:${name};;`;
+                return `WIFI:T:${sec};S:${name};P:${pass};;`;
+            } else if (type === 'vcard') {
+                const name = document.getElementById('vcName').value.trim();
+                const phone = document.getElementById('vcPhone').value.trim();
+                const email = document.getElementById('vcEmail').value.trim();
+                const org = document.getElementById('vcOrg').value.trim();
+                if (!name) return '';
+                let vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\n`;
+                if (phone) vcard += `TEL:${phone}\n`;
+                if (email) vcard += `EMAIL:${email}\n`;
+                if (org) vcard += `ORG:${org}\n`;
+                vcard += `END:VCARD`;
+                return vcard;
+            }
+            return '';
+        }
+
+        function generateQR() {
+            const content = getQRContent();
+            if (!content) {
+                alert('Please fill in the required fields!');
+                return;
+            }
+
+            const size = parseInt(document.getElementById('qrSize').value);
+            const fgColor = document.getElementById('fgColor').value;
+            const bgColor = document.getElementById('bgColor').value;
+
+            // 1. Create a temporary hidden div to generate the base QR code
+            const tempDiv = document.createElement('div');
+            
+            // If logo is added, we MUST use High Error Correction (H)
+            const errorLevel = logoImageObj ? QRCode.CorrectLevel.H : QRCode.CorrectLevel.M;
+
+            new QRCode(tempDiv, {
+                text: content,
+                width: size,
+                height: size,
+                colorDark: fgColor,
+                colorLight: bgColor,
+                correctLevel: errorLevel
+            });
+
+            // 2. Wait for QR to render, then draw on our main canvas
+            setTimeout(() => {
+                const qrCanvas = tempDiv.querySelector('canvas');
+                if (!qrCanvas) return;
+
+                const mainCanvas = document.getElementById('qrCanvas');
+                mainCanvas.width = size;
+                mainCanvas.height = size;
+                const ctx = mainCanvas.getContext('2d');
+
+                // Draw background
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, size, size);
+
+                // Draw QR code
+                ctx.drawImage(qrCanvas, 0, 0);
+
+                // 3. Draw Logo if uploaded
+                if (logoImageObj) {
+                    const logoSize = size * 0.22; // Logo will be 22% of total QR size
+                    const x = (size - logoSize) / 2;
+                    const y = (size - logoSize) / 2;
+
+                    // Draw white rounded rectangle behind logo for better scanability
+                    const padding = size * 0.02;
+                    ctx.fillStyle = bgColor;
+                    ctx.beginPath();
+                    ctx.roundRect(x - padding, y - padding, logoSize + (padding * 2), logoSize + (padding * 2), 10);
+                    ctx.fill();
+
+                    // Draw Logo
+                    ctx.drawImage(logoImageObj, x, y, logoSize, logoSize);
+                }
+
+                document.getElementById('qrResult').classList.add('show');
+            }, 100);
+        }
+
+        function clearQR() {
+            document.getElementById('dynamicFields').innerHTML = '';
+            updateFormFields();
+            logoImageObj = null;
+            document.getElementById('logoPreview').style.display = 'none';
+            document.getElementById('logoInput').value = '';
+            document.getElementById('qrResult').classList.remove('show');
+            document.getElementById('fgColor').value = '#1a1a2e';
+            document.getElementById('bgColor').value = '#ffffff';
+        }
+
+        function downloadQR(format) {
+            const mainCanvas = document.getElementById('qrCanvas');
+            if (!mainCanvas) return;
+
+            if (format === 'png') {
+                const url = mainCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `qrcode-${Date.now()}.png`;
+                link.href = url;
+                link.click();
+            } 
+            else if (format === 'svg') {
+                // For SVG, we extract the pixel data from our main canvas (which includes the logo)
+                const size = mainCanvas.width;
+                const ctx = mainCanvas.getContext('2d');
+                const imgData = ctx.getImageData(0, 0, size, size).data;
+                
+                let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+                svg += `<rect width="100%" height="100%" fill="${document.getElementById('bgColor').value}"/>`;
+
+                // Draw QR modules (pixels)
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        const idx = (y * size + x) * 4;
+                        const r = imgData[idx], g = imgData[idx+1], b = imgData[idx+2], a = imgData[idx+3];
+                        // If pixel is not the background color (skip transparent/background)
+                        if (a > 0 && (r < 250 || g < 250 || b < 250)) {
+                            svg += `<rect x="${x}" y="${y}" width="1" height="1" fill="rgb(${r},${g},${b})"/>`;
+                        }
+                    }
+                }
+                
+                // If logo is present, embed it as base64 image in SVG
+                if (logoImageObj) {
+                    const logoSize = size * 0.22;
+                    const x = (size - logoSize) / 2;
+                    const y = (size - logoSize) / 2;
+                    
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = logoImageObj.width;
+                    tempCanvas.height = logoImageObj.height;
+                    tempCanvas.getContext('2d').drawImage(logoImageObj, 0, 0);
+                    const logoDataURL = tempCanvas.toDataURL('image/png');
+
+                    svg += `<image href="${logoDataURL}" x="${x}" y="${y}" width="${logoSize}" height="${logoSize}" />`;
+                }
+
+                svg += `</svg>`;
+                
+                const blob = new Blob([svg], {type: 'image/svg+xml'});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `qrcode-${Date.now()}.svg`;
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+</body>
+</html>

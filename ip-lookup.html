@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Address Lookup - ToolHub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+        .back-btn {
+            display: inline-block; margin-bottom: 20px; color: #a18cd1;
+            text-decoration: none; font-weight: 600; font-size: 0.95rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 0.95rem; }
+        input {
+            width: 100%; padding: 14px 16px; border: 2px solid #e0e0e8; border-radius: 12px;
+            font-size: 1rem; font-family: inherit; transition: border 0.3s;
+        }
+        input:focus { outline: none; border-color: #a18cd1; }
+
+        button.main-btn {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            color: #fff; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 600;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button.main-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(161,140,209,0.4); }
+        button.main-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .loading { display: none; text-align: center; color: #a18cd1; font-weight: 600; margin-top: 15px; }
+        .loading.show { display: block; }
+
+        /* Result Box */
+        .result-box {
+            margin-top: 25px; background: #f8f9ff; border-radius: 16px; padding: 25px;
+            border: 1px solid #e0e0e8; display: none;
+        }
+        .result-box.show { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .ip-header { text-align: center; margin-bottom: 20px; }
+        .ip-address { font-size: 2rem; font-weight: 800; color: #a18cd1; margin-bottom: 5px; word-break: break-all; }
+        .ip-status { font-size: 0.9rem; color: #43e97b; font-weight: 600; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-item { background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #e0e0e8; }
+        .info-label { font-size: 0.8rem; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        .info-value { font-size: 1rem; font-weight: 600; color: #333; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">← Back to Tools</a>
+        <h1>🌍 IP Address Lookup</h1>
+        <p class="subtitle">Find your public IP address and location details instantly</p>
+
+        <!-- Button to get own IP -->
+        <button class="main-btn" id="getMyIpBtn" onclick="getMyIP()" style="margin-bottom: 20px;">🔍 Find My IP Address</button>
+
+        <!-- Or search for a specific IP -->
+        <div class="form-group">
+            <label>Or search any IP address (e.g. 8.8.8.8):</label>
+            <input type="text" id="ipInput" placeholder="Enter IP address...">
+        </div>
+        <button class="main-btn" id="searchIpBtn" onclick="searchIP()">Search IP Details</button>
+
+        <div class="loading" id="loading">⏳ Fetching IP details...</div>
+
+        <!-- Results -->
+        <div class="result-box" id="resultBox">
+            <div class="ip-header">
+                <div class="ip-address" id="resIP">0.0.0.0</div>
+                <div class="ip-status" id="resStatus">✅ Location Found</div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Country</div>
+                    <div class="info-value" id="resCountry">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">City / Region</div>
+                    <div class="info-value" id="resCity">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">ISP / Provider</div>
+                    <div class="info-value" id="resISP">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Timezone</div>
+                    <div class="info-value" id="resTimezone">-</div>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                    <div class="info-label">Latitude / Longitude</div>
+                    <div class="info-value" id="resCoords">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to format data and show result
+        function displayResult(data) {
+            if (data.error) {
+                alert("Error: " + (data.reason || "Invalid IP address or API limit reached."));
+                return;
+            }
+
+            document.getElementById('resIP').textContent = data.ip || 'Unknown';
+            document.getElementById('resCountry').textContent = data.country_name ? `${data.country_name} (${data.country_code})` : 'Unknown';
+            document.getElementById('resCity').textContent = data.city ? `${data.city}, ${data.region}` : 'Unknown';
+            document.getElementById('resISP').textContent = data.org || 'Unknown';
+            document.getElementById('resTimezone').textContent = data.timezone || 'Unknown';
+            document.getElementById('resCoords').textContent = (data.latitude && data.longitude) ? `${data.latitude}, ${data.longitude}` : 'Unknown';
+
+            document.getElementById('resultBox').classList.add('show');
+        }
+
+        // 1. Get User's Own IP
+        async function getMyIP() {
+            const loading = document.getElementById('loading');
+            const btn = document.getElementById('getMyIpBtn');
+            const resultBox = document.getElementById('resultBox');
+            
+            loading.classList.add('show');
+            btn.disabled = true;
+            resultBox.classList.remove('show');
+
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                alert('Could not fetch your IP. Please check your internet connection.');
+                console.error(error);
+            } finally {
+                loading.classList.remove('show');
+                btn.disabled = false;
+            }
+        }
+
+        // 2. Search Specific IP
+        async function searchIP() {
+            const ip = document.getElementById('ipInput').value.trim();
+            if (!ip) {
+                alert('Please enter an IP address to search.');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const btn = document.getElementById('searchIpBtn');
+            const resultBox = document.getElementById('resultBox');
+
+            loading.classList.add('show');
+            btn.disabled = true;
+            resultBox.classList.remove('show');
+
+            try {
+                const response = await fetch(`https://ipapi.co/${ip}/json/`);
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                alert('Could not fetch IP details. Please check the IP address and try again.');
+                console.error(error);
+            } finally {
+                loading.classList.remove('show');
+                btn.disabled = false;
+            }
+        }
+
+        // Load user's IP automatically when page opens
+        window.onload = () => {
+            getMyIP();
+        };
+    </script>
+</body>
+</html>

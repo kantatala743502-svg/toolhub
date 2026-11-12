@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Percentage Calculator - ToolHub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 650px;
+            width: 100%;
+            padding: 40px;
+        }
+        .back-btn {
+            display: inline-block; margin-bottom: 20px; color: #fcb69f;
+            text-decoration: none; font-weight: 600; font-size: 0.95rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        /* Tabs */
+        .tabs {
+            display: flex; gap: 5px; margin-bottom: 25px; border-bottom: 2px solid #e0e0e8;
+            padding-bottom: 10px; overflow-x: auto; white-space: nowrap;
+        }
+        .tabs::-webkit-scrollbar { height: 5px; }
+        .tabs::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        .tab-btn {
+            padding: 10px 15px; background: none; border: none; font-size: 0.95rem; font-weight: 600;
+            color: #666; cursor: pointer; border-radius: 8px; transition: 0.3s;
+        }
+        .tab-btn.active { background: #ffecd2; color: #e67e22; }
+        .tab-btn:hover:not(.active) { background: #f8f9ff; }
+
+        .tool-panel { display: none; animation: fadeIn 0.4s; }
+        .tool-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 1.1rem; color: #333; }
+        .form-group label { font-weight: 600; }
+        input[type="number"] {
+            width: 120px; padding: 10px 15px; border: 2px solid #e0e0e8; border-radius: 8px;
+            font-size: 1rem; font-family: inherit; transition: border 0.3s; text-align: center;
+        }
+        input[type="number"]:focus { outline: none; border-color: #e67e22; }
+
+        /* Result Box */
+        .result-box {
+            background: #f8f9ff; padding: 20px; border-radius: 12px; text-align: center;
+            border: 2px dashed #e67e22; margin-top: 20px;
+        }
+        .result-label { font-size: 1rem; color: #666; margin-bottom: 10px; }
+        .result-value { font-size: 2.5rem; font-weight: 800; color: #e67e22; line-height: 1; }
+        .result-hint { font-size: 0.85rem; color: #888; margin-top: 10px; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">← Back to Tools</a>
+        <h1>📊 Percentage Calculator</h1>
+        <p class="subtitle">Calculate percentages quickly for any scenario</p>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('what-is', event)">What is X% of Y?</button>
+            <button class="tab-btn" onclick="switchTab('is-what', event)">X is what % of Y?</button>
+            <button class="tab-btn" onclick="switchTab('change', event)">% Increase / Decrease</button>
+            <button class="tab-btn" onclick="switchTab('add-sub', event)">Add / Subtract %</button>
+        </div>
+
+        <!-- 1. What is X% of Y -->
+        <div class="tool-panel active" id="what-is-panel">
+            <div class="form-group">
+                What is <input type="number" id="p1_percent" placeholder="X" oninput="calcWhatIs()"> % of 
+                <input type="number" id="p1_number" placeholder="Y" oninput="calcWhatIs()"> ?
+            </div>
+            <div class="result-box">
+                <div class="result-label">Result:</div>
+                <div class="result-value" id="p1_result">0</div>
+                <div class="result-hint" id="p1_hint">Enter values to calculate</div>
+            </div>
+        </div>
+
+        <!-- 2. X is what % of Y -->
+        <div class="tool-panel" id="is-what-panel">
+            <div class="form-group">
+                <input type="number" id="p2_num1" placeholder="X" oninput="calcIsWhat()"> is what % of 
+                <input type="number" id="p2_num2" placeholder="Y" oninput="calcIsWhat()"> ?
+            </div>
+            <div class="result-box">
+                <div class="result-label">Result:</div>
+                <div class="result-value" id="p2_result">0%</div>
+                <div class="result-hint" id="p2_hint">Enter values to calculate</div>
+            </div>
+        </div>
+
+        <!-- 3. % Increase / Decrease -->
+        <div class="tool-panel" id="change-panel">
+            <div class="form-group">
+                From <input type="number" id="p3_from" placeholder="Old Value" oninput="calcChange()"> 
+                to <input type="number" id="p3_to" placeholder="New Value" oninput="calcChange()">
+            </div>
+            <div class="result-box">
+                <div class="result-label">Percentage Change:</div>
+                <div class="result-value" id="p3_result">0%</div>
+                <div class="result-hint" id="p3_hint">Enter values to calculate</div>
+            </div>
+        </div>
+
+        <!-- 4. Add / Subtract % -->
+        <div class="tool-panel" id="add-sub-panel">
+            <div class="form-group">
+                <select id="p4_type" style="padding: 10px; border-radius: 8px; border: 2px solid #e0e0e8; font-size: 1rem; outline: none;">
+                    <option value="add">Add</option>
+                    <option value="sub">Subtract</option>
+                </select>
+                <input type="number" id="p4_percent" placeholder="X" oninput="calcAddSub()"> % 
+                <span id="p4_label">to</span>
+                <input type="number" id="p4_number" placeholder="Y" oninput="calcAddSub()">
+            </div>
+            <div class="result-box">
+                <div class="result-label">Result:</div>
+                <div class="result-value" id="p4_result">0</div>
+                <div class="result-hint" id="p4_hint">Enter values to calculate</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabName, event) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tool-panel').forEach(panel => panel.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`${tabName}-panel`).classList.add('active');
+        }
+
+        // Utility: Format number (removes trailing zeros)
+        function formatNum(num) {
+            if (!isFinite(num)) return '0';
+            // Round to 4 decimal places and remove trailing zeros
+            return parseFloat(num.toFixed(4)).toString();
+        }
+
+        // ==========================================
+        // 1. What is X% of Y?
+        // ==========================================
+        function calcWhatIs() {
+            const percent = parseFloat(document.getElementById('p1_percent').value);
+            const num = parseFloat(document.getElementById('p1_number').value);
+            const resEl = document.getElementById('p1_result');
+            const hintEl = document.getElementById('p1_hint');
+
+            if (isNaN(percent) || isNaN(num)) {
+                resEl.textContent = '0';
+                hintEl.textContent = 'Enter values to calculate';
+                return;
+            }
+
+            const result = (percent / 100) * num;
+            resEl.textContent = formatNum(result);
+            hintEl.textContent = `${percent}% of ${num} is ${formatNum(result)}`;
+        }
+
+        // ==========================================
+        // 2. X is what % of Y?
+        // ==========================================
+        function calcIsWhat() {
+            const num1 = parseFloat(document.getElementById('p2_num1').value);
+            const num2 = parseFloat(document.getElementById('p2_num2').value);
+            const resEl = document.getElementById('p2_result');
+            const hintEl = document.getElementById('p2_hint');
+
+            if (isNaN(num1) || isNaN(num2) || num2 === 0) {
+                resEl.textContent = '0%';
+                hintEl.textContent = num2 === 0 ? 'Cannot divide by zero' : 'Enter values to calculate';
+                return;
+            }
+
+            const result = (num1 / num2) * 100;
+            resEl.textContent = formatNum(result) + '%';
+            hintEl.textContent = `${num1} is ${formatNum(result)}% of ${num2}`;
+        }
+
+        // ==========================================
+        // 3. % Increase / Decrease
+        // ==========================================
+        function calcChange() {
+            const from = parseFloat(document.getElementById('p3_from').value);
+            const to = parseFloat(document.getElementById('p3_to').value);
+            const resEl = document.getElementById('p3_result');
+            const hintEl = document.getElementById('p3_hint');
+
+            if (isNaN(from) || isNaN(to) || from === 0) {
+                resEl.textContent = '0%';
+                hintEl.textContent = from === 0 ? 'Starting value cannot be 0' : 'Enter values to calculate';
+                return;
+            }
+
+            const change = ((to - from) / Math.abs(from)) * 100;
+            const isIncrease = change > 0;
+            
+            resEl.textContent = (isIncrease ? '+' : '') + formatNum(change) + '%';
+            resEl.style.color = isIncrease ? '#43e97b' : (change < 0 ? '#f5576c' : '#e67e22');
+            
+            if (change === 0) {
+                hintEl.textContent = 'No change';
+            } else {
+                hintEl.textContent = `${isIncrease ? 'Increased' : 'Decreased'} by ${formatNum(Math.abs(change))}%`;
+            }
+        }
+
+        // ==========================================
+        // 4. Add / Subtract %
+        // ==========================================
+        function calcAddSub() {
+            const type = document.getElementById('p4_type').value;
+            document.getElementById('p4_label').textContent = type === 'add' ? 'to' : 'from';
+            
+            const percent = parseFloat(document.getElementById('p4_percent').value);
+            const num = parseFloat(document.getElementById('p4_number').value);
+            const resEl = document.getElementById('p4_result');
+            const hintEl = document.getElementById('p4_hint');
+
+            if (isNaN(percent) || isNaN(num)) {
+                resEl.textContent = '0';
+                hintEl.textContent = 'Enter values to calculate';
+                return;
+            }
+
+            const changeAmount = (percent / 100) * num;
+            const result = type === 'add' ? (num + changeAmount) : (num - changeAmount);
+            
+            resEl.textContent = formatNum(result);
+            hintEl.textContent = `${type === 'add' ? 'Added' : 'Subtracted'} ${formatNum(changeAmount)} ${type === 'add' ? 'to' : 'from'} ${num}`;
+        }
+    </script>
+</body>
+</html>

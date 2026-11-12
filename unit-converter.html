@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter - ToolHub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); min-height: 100vh; padding: 20px; display: flex; align-items: center; justify-content: center; }
+        .container { background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 600px; width: 100%; padding: 40px; }
+        .back-btn { display: inline-block; margin-bottom: 20px; color: #4facfe; text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+        
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #f0f0f5; padding: 5px; border-radius: 10px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: #666; cursor: pointer; border-radius: 8px; transition: 0.3s; }
+        .tab-btn.active { background: #fff; color: #4facfe; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e8; border-radius: 10px; font-size: 1rem; font-family: inherit; }
+        input:focus, select:focus { outline: none; border-color: #4facfe; }
+        
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end; }
+        .swap-icon { text-align: center; font-size: 1.5rem; margin: 10px 0; color: #4facfe; cursor: pointer; }
+        
+        .result-box { background: #f8f9ff; padding: 20px; border-radius: 12px; text-align: center; border: 2px dashed #4facfe; margin-top: 20px; }
+        .result-value { font-size: 2rem; font-weight: 800; color: #4facfe; }
+        .result-label { font-size: 0.9rem; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">← Back to Tools</a>
+        <h1>📏 Unit Converter</h1>
+        <p class="subtitle">Convert length, weight, and temperature units</p>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('length', event)">Length</button>
+            <button class="tab-btn" onclick="switchTab('weight', event)">Weight</button>
+            <button class="tab-btn" onclick="switchTab('temp', event)">Temperature</button>
+        </div>
+
+        <div id="length-panel">
+            <div class="input-row">
+                <div class="form-group">
+                    <label>From:</label>
+                    <input type="number" id="lengthInput" value="1" oninput="convertLength()">
+                    <select id="lengthFrom" onchange="convertLength()">
+                        <option value="m">Meter</option>
+                        <option value="km">Kilometer</option>
+                        <option value="cm">Centimeter</option>
+                        <option value="mi">Mile</option>
+                        <option value="ft">Foot</option>
+                        <option value="in">Inch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>To:</label>
+                    <div style="height: 46px;"></div>
+                    <select id="lengthTo" onchange="convertLength()">
+                        <option value="km">Kilometer</option>
+                        <option value="m">Meter</option>
+                        <option value="cm">Centimeter</option>
+                        <option value="mi">Mile</option>
+                        <option value="ft">Foot</option>
+                        <option value="in">Inch</option>
+                    </select>
+                </div>
+            </div>
+            <div class="result-box">
+                <div class="result-value" id="lengthResult">0.001</div>
+                <div class="result-label" id="lengthLabel">Kilometers</div>
+            </div>
+        </div>
+
+        <div id="weight-panel" style="display: none;">
+            <div class="input-row">
+                <div class="form-group">
+                    <label>From:</label>
+                    <input type="number" id="weightInput" value="1" oninput="convertWeight()">
+                    <select id="weightFrom" onchange="convertWeight()">
+                        <option value="kg">Kilogram</option>
+                        <option value="g">Gram</option>
+                        <option value="lb">Pound</option>
+                        <option value="oz">Ounce</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>To:</label>
+                    <div style="height: 46px;"></div>
+                    <select id="weightTo" onchange="convertWeight()">
+                        <option value="g">Gram</option>
+                        <option value="kg">Kilogram</option>
+                        <option value="lb">Pound</option>
+                        <option value="oz">Ounce</option>
+                    </select>
+                </div>
+            </div>
+            <div class="result-box">
+                <div class="result-value" id="weightResult">1000</div>
+                <div class="result-label" id="weightLabel">Grams</div>
+            </div>
+        </div>
+
+        <div id="temp-panel" style="display: none;">
+            <div class="input-row">
+                <div class="form-group">
+                    <label>From:</label>
+                    <input type="number" id="tempInput" value="0" oninput="convertTemp()">
+                    <select id="tempFrom" onchange="convertTemp()">
+                        <option value="c">Celsius</option>
+                        <option value="f">Fahrenheit</option>
+                        <option value="k">Kelvin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>To:</label>
+                    <div style="height: 46px;"></div>
+                    <select id="tempTo" onchange="convertTemp()">
+                        <option value="f">Fahrenheit</option>
+                        <option value="c">Celsius</option>
+                        <option value="k">Kelvin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="result-box">
+                <div class="result-value" id="tempResult">32</div>
+                <div class="result-label" id="tempLabel">Fahrenheit</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab, event) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('length-panel').style.display = tab === 'length' ? 'block' : 'none';
+            document.getElementById('weight-panel').style.display = tab === 'weight' ? 'block' : 'none';
+            document.getElementById('temp-panel').style.display = tab === 'temp' ? 'block' : 'none';
+        }
+
+        // Length: base unit = meter
+        const lengthFactors = { m: 1, km: 1000, cm: 0.01, mi: 1609.34, ft: 0.3048, in: 0.0254 };
+        function convertLength() {
+            const val = parseFloat(document.getElementById('lengthInput').value) || 0;
+            const from = document.getElementById('lengthFrom').value;
+            const to = document.getElementById('lengthTo').value;
+            const meters = val * lengthFactors[from];
+            const result = meters / lengthFactors[to];
+            document.getElementById('lengthResult').textContent = result.toFixed(4).replace(/\.?0+$/, '');
+            document.getElementById('lengthLabel').textContent = document.getElementById('lengthTo').options[document.getElementById('lengthTo').selectedIndex].text;
+        }
+
+        // Weight: base = kg
+        const weightFactors = { kg: 1, g: 0.001, lb: 0.453592, oz: 0.0283495 };
+        function convertWeight() {
+            const val = parseFloat(document.getElementById('weightInput').value) || 0;
+            const from = document.getElementById('weightFrom').value;
+            const to = document.getElementById('weightTo').value;
+            const kg = val * weightFactors[from];
+            const result = kg / weightFactors[to];
+            document.getElementById('weightResult').textContent = result.toFixed(4).replace(/\.?0+$/, '');
+            document.getElementById('weightLabel').textContent = document.getElementById('weightTo').options[document.getElementById('weightTo').selectedIndex].text;
+        }
+
+        // Temperature
+        function convertTemp() {
+            const val = parseFloat(document.getElementById('tempInput').value) || 0;
+            const from = document.getElementById('tempFrom').value;
+            const to = document.getElementById('tempTo').value;
+            let celsius = val;
+            if (from === 'f') celsius = (val - 32) * 5/9;
+            else if (from === 'k') celsius = val - 273.15;
+
+            let result = celsius;
+            if (to === 'f') result = celsius * 9/5 + 32;
+            else if (to === 'k') result = celsius + 273.15;
+            
+            document.getElementById('tempResult').textContent = result.toFixed(2).replace(/\.?0+$/, '');
+            document.getElementById('tempLabel').textContent = document.getElementById('tempTo').options[document.getElementById('tempTo').selectedIndex].text;
+        }
+
+        // Initialize
+        convertLength();
+        convertWeight();
+        convertTemp();
+    </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Age Calculator - ToolHub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 650px;
+            width: 100%;
+            padding: 40px;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 2rem; margin-bottom: 10px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type="date"] {
+            width: 100%; padding: 14px 16px; border: 2px solid #e0e0e8; border-radius: 12px;
+            font-size: 1rem; transition: border 0.3s; font-family: inherit;
+        }
+        input[type="date"]:focus { outline: none; border-color: #667eea; }
+        
+        button {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 600;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-top: 10px;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+
+        .result {
+            margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #f8f9ff, #eef0ff);
+            border-radius: 16px; border: 2px solid #667eea; display: none; animation: fadeIn 0.5s;
+        }
+        .result.show { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .age-display {
+            text-align: center; font-size: 1.4rem; font-weight: 700; color: #1a1a2e;
+            margin-bottom: 25px; padding: 15px; background: #fff; border-radius: 12px;
+        }
+        .age-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .age-box {
+            background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .age-value { font-size: 2rem; font-weight: 800; color: #667eea; line-height: 1; }
+        .age-label { font-size: 0.8rem; color: #666; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Extra Info Styles */
+        .extra-section { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .extra-section h3 { font-size: 1.1rem; color: #333; margin-bottom: 15px; border-bottom: 2px solid #eef0ff; padding-bottom: 8px; }
+        
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f5; font-size: 0.95rem; }
+        .info-row:last-child { border-bottom: none; }
+        .info-row span:first-child { color: #666; }
+        .info-row span:last-child { font-weight: 600; color: #333; }
+
+        .zodiac-box { text-align: center; padding: 15px; background: #f8f9ff; border-radius: 10px; margin-bottom: 15px; }
+        .zodiac-icon { font-size: 2.5rem; margin-bottom: 5px; }
+        .zodiac-name { font-weight: 700; color: #667eea; font-size: 1.1rem; }
+
+        @media (max-width: 500px) {
+            .container { padding: 25px; }
+            h1 { font-size: 1.5rem; }
+            .age-value { font-size: 1.5rem; }
+            .age-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-btn">← Back to Tools</a>
+        <h1>🎂 Advanced Age Calculator</h1>
+        <p class="subtitle">Find your exact age, next birthday countdown, and zodiac sign</p>
+
+        <div class="form-group">
+            <label for="dob">Enter your Date of Birth:</label>
+            <input type="date" id="dob" max="">
+        </div>
+
+        <button onclick="calculateAge()">Calculate My Age</button>
+
+        <div class="result" id="result">
+            <div class="age-display" id="ageDisplay"></div>
+            
+            <div class="age-grid">
+                <div class="age-box">
+                    <div class="age-value" id="years">0</div>
+                    <div class="age-label">Years</div>
+                </div>
+                <div class="age-box">
+                    <div class="age-value" id="months">0</div>
+                    <div class="age-label">Months</div>
+                </div>
+                <div class="age-box">
+                    <div class="age-value" id="days">0</div>
+                    <div class="age-label">Days</div>
+                </div>
+            </div>
+
+            <!-- Zodiac Section -->
+            <div class="zodiac-box">
+                <div class="zodiac-icon" id="zodiacIcon">♈</div>
+                <div class="zodiac-name" id="zodiacName">Aries</div>
+                <div style="font-size: 0.85rem; color: #666;">Your Zodiac Sign</div>
+            </div>
+
+            <!-- Extra Info Section -->
+            <div class="extra-section">
+                <h3>📅 Birth Details & Statistics</h3>
+                <div class="info-row">
+                    <span>You were born on:</span>
+                    <span id="birthDay">Monday</span>
+                </div>
+                <div class="info-row">
+                    <span>Next Birthday in:</span>
+                    <span id="nextBday" style="color: #f5576c;">0 Days</span>
+                </div>
+                <div class="info-row">
+                    <span>Total Days Lived:</span>
+                    <span id="totalDays">0</span>
+                </div>
+                <div class="info-row">
+                    <span>Total Hours Lived:</span>
+                    <span id="totalHours">0</span>
+                </div>
+                <div class="info-row">
+                    <span>Total Minutes Lived:</span>
+                    <span id="totalMinutes">0</span>
+                </div>
+                <div class="info-row">
+                    <span>Total Heartbeats (Approx):</span>
+                    <span id="totalBeats">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set max date to today
+        const dobInput = document.getElementById('dob');
+        const today = new Date().toISOString().split('T')[0];
+        dobInput.max = today;
+
+        // Zodiac Signs Data
+        const zodiacSigns = [
+            { name: "Capricorn", icon: "♑", start: [12, 22], end: [1, 19] },
+            { name: "Aquarius", icon: "♒", start: [1, 20], end: [2, 18] },
+            { name: "Pisces", icon: "♓", start: [2, 19], end: [3, 20] },
+            { name: "Aries", icon: "♈", start: [3, 21], end: [4, 19] },
+            { name: "Taurus", icon: "♉", start: [4, 20], end: [5, 20] },
+            { name: "Gemini", icon: "♊", start: [5, 21], end: [6, 20] },
+            { name: "Cancer", icon: "♋", start: [6, 21], end: [7, 22] },
+            { name: "Leo", icon: "♌", start: [7, 23], end: [8, 22] },
+            { name: "Virgo", icon: "♍", start: [8, 23], end: [9, 22] },
+            { name: "Libra", icon: "♎", start: [9, 23], end: [10, 22] },
+            { name: "Scorpio", icon: "♏", start: [10, 23], end: [11, 21] },
+            { name: "Sagittarius", icon: "♐", start: [11, 22], end: [12, 21] }
+        ];
+
+        function getZodiac(day, month) {
+            for (let sign of zodiacSigns) {
+                let [sm, sd] = sign.start;
+                let [em, ed] = sign.end;
+                
+                if (sm === 12) { // Capricorn special case
+                    if ((month === 12 && day >= sd) || (month === 1 && day <= ed)) return sign;
+                } else if (month === sm && day >= sd) {
+                    return sign;
+                } else if (month === em && day <= ed) {
+                    return sign;
+                }
+            }
+            return zodiacSigns[0]; // Fallback
+        }
+
+        function calculateAge() {
+            const dobValue = dobInput.value;
+            if (!dobValue) {
+                alert('Please select your date of birth!');
+                return;
+            }
+
+            const dob = new Date(dobValue);
+            const now = new Date();
+
+            if (dob > now) {
+                alert('Date of birth cannot be in the future!');
+                return;
+            }
+
+            // Calculate Age
+            let years = now.getFullYear() - dob.getFullYear();
+            let months = now.getMonth() - dob.getMonth();
+            let days = now.getDate() - dob.getDate();
+
+            if (days < 0) {
+                months--;
+                const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                days += lastMonth.getDate();
+            }
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            // Update Age Display
+            document.getElementById('years').textContent = years;
+            document.getElementById('months').textContent = months;
+            document.getElementById('days').textContent = days;
+            document.getElementById('ageDisplay').textContent = 
+                `You are ${years} years, ${months} months, and ${days} days old`;
+
+            // Day of Birth
+            const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            document.getElementById('birthDay').textContent = daysOfWeek[dob.getDay()];
+
+            // Zodiac Sign
+            const zodiac = getZodiac(dob.getDate(), dob.getMonth() + 1);
+            document.getElementById('zodiacIcon').textContent = zodiac.icon;
+            document.getElementById('zodiacName').textContent = zodiac.name;
+
+            // Next Birthday Countdown
+            let nextBirthday = new Date(now.getFullYear(), dob.getMonth(), dob.getDate());
+            if (nextBirthday < now) {
+                nextBirthday.setFullYear(now.getFullYear() + 1);
+            }
+            const diffTime = Math.abs(nextBirthday - now);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                document.getElementById('nextBday').textContent = "🎉 Today is your Birthday!";
+            } else {
+                document.getElementById('nextBday').textContent = `${diffDays} Days`;
+            }
+
+            // Total Stats
+            const totalDays = Math.floor((now - dob) / (1000 * 60 * 60 * 24));
+            const totalHours = totalDays * 24;
+            const totalMinutes = totalHours * 60;
+            const totalBeats = totalMinutes * 72; // Assuming 72 beats per minute
+
+            document.getElementById('totalDays').textContent = totalDays.toLocaleString();
+            document.getElementById('totalHours').textContent = totalHours.toLocaleString();
+            document.getElementById('totalMinutes').textContent = totalMinutes.toLocaleString();
+            document.getElementById('totalBeats').textContent = totalBeats.toLocaleString();
+
+            document.getElementById('result').classList.add('show');
+            
+            // Scroll to result smoothly
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

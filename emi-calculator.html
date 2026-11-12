@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI Calculator (India) - ToolHub</title>
+    <!-- Chart.js for the donut chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 850px;
+            width: 100%;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; gap: 30px; }
+        }
+        
+        .back-btn {
+            display: inline-block; margin-bottom: 10px; color: #ff9a9e;
+            text-decoration: none; font-weight: 600; font-size: 0.95rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        h1 { color: #1a1a2e; font-size: 1.8rem; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 25px; font-size: 0.95rem; }
+
+        /* Inputs */
+        .form-group { margin-bottom: 20px; }
+        label { display: flex; justify-content: space-between; font-weight: 600; color: #333; margin-bottom: 8px; font-size: 0.95rem; }
+        .val-box { background: #ff9a9e; color: #fff; padding: 2px 10px; border-radius: 20px; font-size: 0.85rem; }
+        
+        input[type="range"] { width: 100%; accent-color: #ff9a9e; cursor: pointer; margin-bottom: 10px; }
+        input[type="number"] {
+            width: 100%; padding: 12px 15px; border: 2px solid #e0e0e8; border-radius: 10px;
+            font-size: 1rem; font-family: inherit; transition: border 0.3s; background: #fff;
+        }
+        input[type="number"]:focus { outline: none; border-color: #ff9a9e; }
+
+        /* Result Card */
+        .result-card {
+            background: #f8f9ff; padding: 25px; border-radius: 16px;
+            border: 1px solid #e0e0e8; text-align: center; margin-bottom: 20px;
+        }
+        .emi-amount { font-size: 2.5rem; font-weight: 800; color: #ff9a9e; margin-bottom: 5px; }
+        .emi-label { font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Breakdown */
+        .breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .breakdown-box { background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #e0e0e8; text-align: center; }
+        .breakdown-value { font-size: 1.1rem; font-weight: 700; color: #333; }
+        .breakdown-label { font-size: 0.8rem; color: #888; margin-top: 5px; }
+
+        /* Chart */
+        .chart-container { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LEFT: Inputs -->
+        <div class="calc-section">
+            <a href="../index.html" class="back-btn">← Back to Tools</a>
+            <h1>🏦 EMI Calculator</h1>
+            <p class="subtitle">Calculate your monthly loan installments (India)</p>
+
+            <div class="form-group">
+                <label>Loan Amount (₹): <span class="val-box" id="amountVal">10,00,000</span></label>
+                <input type="range" id="amountRange" min="10000" max="10000000" step="10000" value="1000000" oninput="syncAmount()">
+                <input type="number" id="amountInput" value="1000000" min="10000" oninput="syncAmountRange()">
+            </div>
+
+            <div class="form-group">
+                <label>Interest Rate (%): <span class="val-box" id="rateVal">8.5</span></label>
+                <input type="range" id="rateRange" min="1" max="30" step="0.1" value="8.5" oninput="syncRate()">
+                <input type="number" id="rateInput" value="8.5" min="1" step="0.1" oninput="syncRateRange()">
+            </div>
+
+            <div class="form-group">
+                <label>Loan Tenure (Years): <span class="val-box" id="tenureVal">20</span></label>
+                <input type="range" id="tenureRange" min="1" max="30" step="1" value="20" oninput="syncTenure()">
+                <input type="number" id="tenureInput" value="20" min="1" oninput="syncTenureRange()">
+            </div>
+        </div>
+
+        <!-- RIGHT: Results & Chart -->
+        <div class="result-section">
+            <div class="result-card">
+                <div class="emi-label">Monthly EMI</div>
+                <div class="emi-amount" id="emiResult">₹ 0</div>
+            </div>
+
+            <div class="breakdown">
+                <div class="breakdown-box">
+                    <div class="breakdown-value" id="principalResult">₹ 0</div>
+                    <div class="breakdown-label">Principal Amount</div>
+                </div>
+                <div class="breakdown-box">
+                    <div class="breakdown-value" id="interestResult">₹ 0</div>
+                    <div class="breakdown-label">Total Interest</div>
+                </div>
+            </div>
+
+            <div class="breakdown" style="margin-top: 15px;">
+                <div class="breakdown-box" style="grid-column: span 2; background: #eef0ff; border-color: #ff9a9e;">
+                    <div class="breakdown-value" id="totalResult">₹ 0</div>
+                    <div class="breakdown-label">Total Payment (Principal + Interest)</div>
+                </div>
+            </div>
+
+            <div class="chart-container" style="margin-top: 25px;">
+                <canvas id="emiChart" width="200" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+
+        // Format currency to Indian format (e.g. 10,00,000) with Rupee symbol
+        function formatCurrency(num) {
+            return '₹ ' + Math.round(num).toLocaleString('en-IN');
+        }
+
+        // Sync Range and Input Fields
+        function syncAmount() {
+            document.getElementById('amountInput').value = document.getElementById('amountRange').value;
+            calculateEMI();
+        }
+        function syncAmountRange() {
+            document.getElementById('amountRange').value = document.getElementById('amountInput').value;
+            calculateEMI();
+        }
+
+        function syncRate() {
+            document.getElementById('rateInput').value = document.getElementById('rateRange').value;
+            calculateEMI();
+        }
+        function syncRateRange() {
+            document.getElementById('rateRange').value = document.getElementById('rateInput').value;
+            calculateEMI();
+        }
+
+        function syncTenure() {
+            document.getElementById('tenureInput').value = document.getElementById('tenureRange').value;
+            calculateEMI();
+        }
+        function syncTenureRange() {
+            document.getElementById('tenureRange').value = document.getElementById('tenureInput').value;
+            calculateEMI();
+        }
+
+        // Main Calculation
+        function calculateEMI() {
+            const principal = parseFloat(document.getElementById('amountInput').value);
+            const annualRate = parseFloat(document.getElementById('rateInput').value);
+            const years = parseFloat(document.getElementById('tenureInput').value);
+
+            // Update Labels
+            document.getElementById('amountVal').textContent = principal.toLocaleString('en-IN');
+            document.getElementById('rateVal').textContent = annualRate;
+            document.getElementById('tenureVal').textContent = years;
+
+            if (!principal || !annualRate || !years || principal <= 0 || annualRate <= 0 || years <= 0) return;
+
+            const monthlyRate = annualRate / 12 / 100;
+            const months = years * 12;
+
+            // EMI Formula: P * r * (1+r)^n / ((1+r)^n - 1)
+            const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+            
+            const totalPayment = emi * months;
+            const totalInterest = totalPayment - principal;
+
+            // Update Results
+            document.getElementById('emiResult').textContent = formatCurrency(emi);
+            document.getElementById('principalResult').textContent = formatCurrency(principal);
+            document.getElementById('interestResult').textContent = formatCurrency(totalInterest);
+            document.getElementById('totalResult').textContent = formatCurrency(totalPayment);
+
+            // Update Chart
+            updateChart(principal, totalInterest);
+        }
+
+        function updateChart(principal, interest) {
+            const ctx = document.getElementById('emiChart').getContext('2d');
+
+            if (myChart) {
+                myChart.data.datasets[0].data = [principal, interest];
+                myChart.update();
+            } else {
+                myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Principal Amount', 'Total Interest'],
+                        datasets: [{
+                            data: [principal, interest],
+                            backgroundColor: ['#667eea', '#ff9a9e'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    font: { family: 'sans-serif', size: 12 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        let value = context.raw || 0;
+                                        return label + ': ' + formatCurrency(value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initial Calculation on Load
+        window.onload = () => {
+            calculateEMI();
+        };
+    </script>
+</body>
+</html>
